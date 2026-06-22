@@ -20,8 +20,7 @@ import { api } from '../api';
 import type { PackageInfo, RegistryType, PackageSource } from '../types';
 import { formatSize, formatRelativeTime } from '../utils';
 import SecurityBadge from '../components/SecurityBadge';
-
-type SortBy = 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
+import { nextSortState, type SortBy } from '../security';
 
 export default function Packages() {
   const navigate = useNavigate();
@@ -82,12 +81,13 @@ export default function Packages() {
   };
 
   const handleSort = (col: SortBy) => {
-    if (sortBy === col) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(col);
-      setSortOrder('desc');
-    }
+    const next = nextSortState(
+      { sortBy, sortOrder, page },
+      col
+    );
+    setSortBy(next.sortBy);
+    setSortOrder(next.sortOrder);
+    setPage(next.page);
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

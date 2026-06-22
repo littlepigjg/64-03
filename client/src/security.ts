@@ -92,3 +92,30 @@ export function getScoreWord(value: number): string {
   if (value >= 40) return '一般';
   return '较差';
 }
+
+export type SortBy = 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
+export type SortOrder = 'asc' | 'desc';
+
+export interface SortState {
+  sortBy: SortBy;
+  sortOrder: SortOrder;
+  page: number;
+}
+
+export function nextSortState(
+  current: SortState,
+  clickedCol: SortBy
+): SortState {
+  if (current.sortBy === clickedCol) {
+    return {
+      sortBy: clickedCol,
+      sortOrder: current.sortOrder === 'asc' ? 'desc' : 'asc',
+      page: 1,
+    };
+  }
+  return {
+    sortBy: clickedCol,
+    sortOrder: 'desc',
+    page: 1,
+  };
+}
