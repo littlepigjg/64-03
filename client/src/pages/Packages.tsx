@@ -14,12 +14,14 @@ import {
   Loader2,
   ArrowUpDown,
   TrendingUp,
+  Shield,
 } from 'lucide-react';
 import { api } from '../api';
 import type { PackageInfo, RegistryType, PackageSource } from '../types';
 import { formatSize, formatRelativeTime } from '../utils';
+import SecurityBadge from '../components/SecurityBadge';
 
-type SortBy = 'name' | 'updatedAt' | 'size' | 'downloads';
+type SortBy = 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
 
 export default function Packages() {
   const navigate = useNavigate();
@@ -87,6 +89,12 @@ export default function Packages() {
       setSortOrder('desc');
     }
   };
+
+  const sortedPackages = [...packages].sort((a, b) => {
+    if (sortBy !== 'security') return 0;
+    const diff = a.securityScore.total - b.securityScore.total;
+    return sortOrder === 'asc' ? diff : -diff;
+  });
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -160,6 +168,11 @@ export default function Packages() {
                     包名 <ArrowUpDown size={12} />
                   </span>
                 </th>
+                <th className="cursor-pointer select-none" onClick={() => handleSort('security')}>
+                  <span className="flex items-center gap-1">
+                    <Shield size={12} /> 安全评分 <ArrowUpDown size={12} />
+                  </span>
+                </th>
                 <th>仓库</th>
                 <th>来源</th>
                 <th className="cursor-pointer select-none" onClick={() => handleSort('size')}>
@@ -184,7 +197,7 @@ export default function Packages() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center">
+                  <td colSpan={10} className="py-12 text-center">
                     <Loader2 className="animate-spin text-indigo-600 mx-auto" size={24} />
                   </td>
                 </tr>
@@ -192,7 +205,7 @@ export default function Packages() {
 
               {!loading && packages.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center">
+                  <td colSpan={10} className="py-16 text-center">
                     <Box size={48} className="mx-auto text-slate-300 mb-3" />
                     <p className="text-slate-500">暂无符合条件的包</p>
                     <p className="text-sm text-slate-400 mt-1">
@@ -203,7 +216,7 @@ export default function Packages() {
               )}
 
               {!loading &&
-                packages.map((pkg) => (
+                sortedPackages.map((pkg) => (
                   <tr
                     key={`${pkg.registry}-${pkg.name}`}
                     className="cursor-pointer"
@@ -225,6 +238,9 @@ export default function Packages() {
                           {pkg.description}
                         </div>
                       )}
+                    </td>
+                    <td>
+                      <SecurityBadge score={pkg.securityScore} />
                     </td>
                     <td>
                       <span

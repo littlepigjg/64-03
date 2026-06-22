@@ -2,6 +2,22 @@ export type RegistryType = 'npm' | 'pypi';
 
 export type PackageSource = 'cache' | 'private' | 'upstream';
 
+export type SecurityGrade = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+
+export interface SecurityScoreBreakdown {
+  downloads: number;
+  recency: number;
+  license: number;
+  maturity: number;
+  age: number;
+}
+
+export interface SecurityScore {
+  total: number;
+  grade: SecurityGrade;
+  breakdown: SecurityScoreBreakdown;
+}
+
 export interface PackageInfo {
   name: string;
   registry: RegistryType;
@@ -16,6 +32,7 @@ export interface PackageInfo {
   updatedAt: number;
   totalSize: number;
   downloadCount: number;
+  securityScore: SecurityScore;
 }
 
 export interface PackageVersion {

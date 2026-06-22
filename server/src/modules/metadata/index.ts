@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ensureDir, formatDate, getDirSize } from '../../utils';
+import { ensureDir, formatDate, getDirSize, calculateSecurityScore } from '../../utils';
 import { config } from '../../config';
 import type { PackageInfo, PackageVersion, CacheStats, StorageTrend, CachePolicy, RegistryType, PackageSource } from '../../types';
 
@@ -224,7 +224,7 @@ export class MetadataIndex {
         downloadCount: v.downloadCount,
       }));
 
-    return {
+    const baseInfo = {
       name: pkg.name,
       registry: pkg.registry,
       source: pkg.source,
@@ -238,6 +238,11 @@ export class MetadataIndex {
       totalSize: pkg.totalSize,
       downloadCount: pkg.downloadCount,
       versions,
+    };
+
+    return {
+      ...baseInfo,
+      securityScore: calculateSecurityScore(baseInfo),
     };
   }
 
@@ -289,28 +294,35 @@ export class MetadataIndex {
       arr.sort((a, b) => b.publishedAt - a.publishedAt);
     }
 
-    const packages: PackageInfo[] = list.map((pkg) => ({
-      name: pkg.name,
-      registry: pkg.registry,
-      source: pkg.source,
-      scope: pkg.scope,
-      description: pkg.description,
-      author: pkg.author,
-      license: pkg.license,
-      latestVersion: pkg.latestVersion,
-      createdAt: pkg.createdAt,
-      updatedAt: pkg.updatedAt,
-      totalSize: pkg.totalSize,
-      downloadCount: pkg.downloadCount,
-      versions: (versionsByPkg[pkg.id] || []).map<PackageVersion>((v) => ({
+    const packages: PackageInfo[] = list.map((pkg) => {
+      const versions = (versionsByPkg[pkg.id] || []).map<PackageVersion>((v) => ({
         version: v.version,
         size: v.size,
         filePath: v.filePath,
         sha1: v.sha1,
         publishedAt: v.publishedAt,
         downloadCount: v.downloadCount,
-      })),
-    }));
+      }));
+      const baseInfo = {
+        name: pkg.name,
+        registry: pkg.registry,
+        source: pkg.source,
+        scope: pkg.scope,
+        description: pkg.description,
+        author: pkg.author,
+        license: pkg.license,
+        latestVersion: pkg.latestVersion,
+        createdAt: pkg.createdAt,
+        updatedAt: pkg.updatedAt,
+        totalSize: pkg.totalSize,
+        downloadCount: pkg.downloadCount,
+        versions,
+      };
+      return {
+        ...baseInfo,
+        securityScore: calculateSecurityScore(baseInfo),
+      };
+    });
 
     return { packages, total };
   }
