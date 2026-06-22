@@ -35,7 +35,7 @@ export const api = {
     search?: string;
     limit?: number;
     offset?: number;
-    sortBy?: 'name' | 'updatedAt' | 'size' | 'downloads';
+    sortBy?: 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
     sortOrder?: 'asc' | 'desc';
   } = {}) => {
     const qs = new URLSearchParams();

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { ensureDir, formatDate, getDirSize, calculateSecurityScore } from '../../utils';
+import { ensureDir, formatDate, getDirSize } from '../../utils';
+import { calculateSecurityScore } from '../../security';
 import { config } from '../../config';
 import type { PackageInfo, PackageVersion, CacheStats, StorageTrend, CachePolicy, RegistryType, PackageSource } from '../../types';
 
@@ -242,7 +243,14 @@ export class MetadataIndex {
 
     return {
       ...baseInfo,
-      securityScore: calculateSecurityScore(baseInfo),
+      securityScore: calculateSecurityScore({
+        downloadCount: baseInfo.downloadCount,
+        updatedAt: baseInfo.updatedAt,
+        createdAt: baseInfo.createdAt,
+        license: baseInfo.license,
+        versionsCount: baseInfo.versions.length,
+        source: baseInfo.source,
+      }),
     };
   }
 
@@ -252,7 +260,7 @@ export class MetadataIndex {
     search?: string;
     limit?: number;
     offset?: number;
-    sortBy?: 'name' | 'updatedAt' | 'size' | 'downloads';
+    sortBy?: 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
     sortOrder?: 'asc' | 'desc';
   } = {}): { packages: PackageInfo[]; total: number } {
     let list = [...this.db.packages];
@@ -266,17 +274,40 @@ export class MetadataIndex {
 
     const total = list.length;
 
-    const sortField = options.sortBy === 'size' ? 'totalSize' :
-      options.sortBy === 'downloads' ? 'downloadCount' :
-      options.sortBy === 'updatedAt' ? 'updatedAt' : 'name';
     const order = options.sortOrder?.toUpperCase() === 'ASC' ? 1 : -1;
 
-    list.sort((a: any, b: any) => {
-      const va = a[sortField];
-      const vb = b[sortField];
-      if (typeof va === 'string') return va.localeCompare(vb) * order;
-      return (va - vb) * order;
-    });
+    if (options.sortBy === 'security') {
+      const idSet = new Set(list.map((p) => p.id));
+      const versionCountByPkg: Record<number, number> = {};
+      for (const v of this.db.versions) {
+        if (idSet.has(v.packageId)) {
+          versionCountByPkg[v.packageId] = (versionCountByPkg[v.packageId] || 0) + 1;
+        }
+      }
+      const scored = list.map((pkg) => ({
+        pkg,
+        score: calculateSecurityScore({
+          downloadCount: pkg.downloadCount,
+          updatedAt: pkg.updatedAt,
+          createdAt: pkg.createdAt,
+          license: pkg.license,
+          versionsCount: versionCountByPkg[pkg.id] || 0,
+          source: pkg.source,
+        }).total,
+      }));
+      scored.sort((a, b) => (a.score - b.score) * order);
+      list = scored.map((s) => s.pkg);
+    } else {
+      const sortField = options.sortBy === 'size' ? 'totalSize' :
+        options.sortBy === 'downloads' ? 'downloadCount' :
+        options.sortBy === 'updatedAt' ? 'updatedAt' : 'name';
+      list.sort((a: any, b: any) => {
+        const va = a[sortField];
+        const vb = b[sortField];
+        if (typeof va === 'string') return va.localeCompare(vb) * order;
+        return (va - vb) * order;
+      });
+    }
 
     const limit = options.limit || 50;
     const offset = options.offset || 0;
@@ -320,7 +351,14 @@ export class MetadataIndex {
       };
       return {
         ...baseInfo,
-        securityScore: calculateSecurityScore(baseInfo),
+        securityScore: calculateSecurityScore({
+          downloadCount: baseInfo.downloadCount,
+          updatedAt: baseInfo.updatedAt,
+          createdAt: baseInfo.createdAt,
+          license: baseInfo.license,
+          versionsCount: baseInfo.versions.length,
+          source: baseInfo.source,
+        }),
       };
     });
 

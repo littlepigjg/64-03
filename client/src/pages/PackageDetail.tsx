@@ -12,11 +12,11 @@ import {
   Loader2,
   AlertTriangle,
   Shield,
-  ShieldCheck,
 } from 'lucide-react';
 import { api } from '../api';
 import type { PackageInfo, RegistryType, SecurityScoreBreakdown } from '../types';
-import { formatSize, formatDate, formatRelativeTime, getGradeStyle, SCORE_DIMENSION_LABELS } from '../utils';
+import { formatSize, formatDate, formatRelativeTime } from '../utils';
+import { SCORE_DIMENSION_LABELS, getScoreColor, getScoreBgClass, getScoreTextClass, getScoreWord } from '../security';
 import SecurityBadge from '../components/SecurityBadge';
 
 export default function PackageDetail() {
@@ -254,16 +254,6 @@ function InfoCard({
 }
 
 function SecurityScoreBreakdownView({ breakdown }: { breakdown: SecurityScoreBreakdown }) {
-  const getScoreColor = (v: number) =>
-    v >= 80 ? '#10b981' : v >= 60 ? '#84cc16' : v >= 40 ? '#f59e0b' : '#ef4444';
-  const getScoreBg = (v: number) =>
-    v >= 80 ? 'bg-emerald-50 border-emerald-200'
-      : v >= 60 ? 'bg-lime-50 border-lime-200'
-      : v >= 40 ? 'bg-amber-50 border-amber-200'
-      : 'bg-red-50 border-red-200';
-  const getScoreText = (v: number) =>
-    v >= 80 ? 'text-emerald-700' : v >= 60 ? 'text-lime-700' : v >= 40 ? 'text-amber-700' : 'text-red-700';
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
       {(Object.keys(breakdown) as Array<keyof SecurityScoreBreakdown>).map((key) => {
@@ -272,13 +262,13 @@ function SecurityScoreBreakdownView({ breakdown }: { breakdown: SecurityScoreBre
         return (
           <div
             key={key}
-            className={`p-4 rounded-xl border ${getScoreBg(value)}`}
+            className={`p-4 rounded-xl border ${getScoreBgClass(value)}`}
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-slate-700">
                 {dim.icon} {dim.label}
               </span>
-              <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${getScoreText(value)} bg-white/60`}>
+              <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${getScoreTextClass(value)} bg-white/60`}>
                 {dim.weight}
               </span>
             </div>
@@ -291,10 +281,10 @@ function SecurityScoreBreakdownView({ breakdown }: { breakdown: SecurityScoreBre
                   />
                 </div>
                 <div className="mt-1 text-[10px] text-slate-500">
-                  {value >= 80 ? '优秀' : value >= 60 ? '良好' : value >= 40 ? '一般' : '较差'}
+                  {getScoreWord(value)}
                 </div>
               </div>
-              <span className={`text-2xl font-bold ${getScoreText(value)}`}>{value}</span>
+              <span className={`text-2xl font-bold ${getScoreTextClass(value)}`}>{value}</span>
             </div>
           </div>
         );

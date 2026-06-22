@@ -29,7 +29,7 @@ router.get('/packages', (req: Request, res: Response) => {
   const registry = (typeof req.query.registry === 'string' ? req.query.registry as RegistryType : undefined);
   const source = (typeof req.query.source === 'string' ? req.query.source as PackageSource : undefined);
   const sortBy = typeof req.query.sortBy === 'string'
-    ? (req.query.sortBy as 'name' | 'updatedAt' | 'size' | 'downloads')
+    ? (req.query.sortBy as 'name' | 'updatedAt' | 'size' | 'downloads' | 'security')
     : 'updatedAt';
   const sortOrder = typeof req.query.sortOrder === 'string'
     ? (req.query.sortOrder as 'asc' | 'desc')

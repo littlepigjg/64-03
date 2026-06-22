@@ -1,7 +1,7 @@
 import { Shield, ShieldCheck, ShieldAlert, ShieldX, Info } from 'lucide-react';
 import { useState } from 'react';
 import type { SecurityScore, SecurityScoreBreakdown } from '../types';
-import { getGradeStyle, SCORE_DIMENSION_LABELS } from '../utils';
+import { getGradeStyle, SCORE_DIMENSION_LABELS, getScoreColor } from '../security';
 
 interface SecurityBadgeProps {
   score: SecurityScore;
@@ -71,7 +71,7 @@ export default function SecurityBadge({ score, size = 'sm', showTooltip = true }
                       className="h-full rounded-full transition-all"
                       style={{
                         width: `${value}%`,
-                        background: value >= 80 ? '#10b981' : value >= 60 ? '#84cc16' : value >= 40 ? '#f59e0b' : '#ef4444',
+                        background: getScoreColor(value),
                       }}
                     />
                   </div>

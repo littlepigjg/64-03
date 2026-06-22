@@ -90,12 +90,6 @@ export default function Packages() {
     }
   };
 
-  const sortedPackages = [...packages].sort((a, b) => {
-    if (sortBy !== 'security') return 0;
-    const diff = a.securityScore.total - b.securityScore.total;
-    return sortOrder === 'asc' ? diff : -diff;
-  });
-
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
@@ -216,7 +210,7 @@ export default function Packages() {
               )}
 
               {!loading &&
-                sortedPackages.map((pkg) => (
+                packages.map((pkg) => (
                   <tr
                     key={`${pkg.registry}-${pkg.name}`}
                     className="cursor-pointer"
