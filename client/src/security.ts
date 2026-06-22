@@ -1,4 +1,5 @@
 import type { SecurityGrade, SecurityScoreBreakdown } from './types';
+import type { RegistryType, PackageSource } from './types';
 
 export interface GradeStyle {
   badgeClass: string;
@@ -96,26 +97,62 @@ export function getScoreWord(value: number): string {
 export type SortBy = 'name' | 'updatedAt' | 'size' | 'downloads' | 'security';
 export type SortOrder = 'asc' | 'desc';
 
-export interface SortState {
+export interface FilterState {
+  search: string;
+  registry: RegistryType | '';
+  source: PackageSource | '';
   sortBy: SortBy;
   sortOrder: SortOrder;
   page: number;
 }
 
 export function nextSortState(
-  current: SortState,
+  current: FilterState,
   clickedCol: SortBy
-): SortState {
+): FilterState {
   if (current.sortBy === clickedCol) {
     return {
+      ...current,
       sortBy: clickedCol,
       sortOrder: current.sortOrder === 'asc' ? 'desc' : 'asc',
       page: 1,
     };
   }
   return {
+    ...current,
     sortBy: clickedCol,
     sortOrder: 'desc',
     page: 1,
   };
+}
+
+export function setSearchState(
+  current: FilterState,
+  search: string
+): FilterState {
+  if (current.search === search) return current;
+  return { ...current, search, page: 1 };
+}
+
+export function setRegistryState(
+  current: FilterState,
+  registry: RegistryType | ''
+): FilterState {
+  if (current.registry === registry) return current;
+  return { ...current, registry, page: 1 };
+}
+
+export function setSourceState(
+  current: FilterState,
+  source: PackageSource | ''
+): FilterState {
+  if (current.source === source) return current;
+  return { ...current, source, page: 1 };
+}
+
+export function setPageState(
+  current: FilterState,
+  page: number
+): FilterState {
+  return { ...current, page: Math.max(1, page) };
 }

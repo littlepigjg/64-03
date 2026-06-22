@@ -20,7 +20,15 @@ import { api } from '../api';
 import type { PackageInfo, RegistryType, PackageSource } from '../types';
 import { formatSize, formatRelativeTime } from '../utils';
 import SecurityBadge from '../components/SecurityBadge';
-import { nextSortState, type SortBy } from '../security';
+import {
+  nextSortState,
+  setSearchState,
+  setRegistryState,
+  setSourceState,
+  setPageState,
+  type SortBy,
+  type FilterState,
+} from '../security';
 
 export default function Packages() {
   const navigate = useNavigate();
@@ -44,6 +52,24 @@ export default function Packages() {
   );
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  const filterState: FilterState = {
+    search,
+    registry,
+    source,
+    sortBy,
+    sortOrder,
+    page,
+  };
+
+  const applyFilter = (next: FilterState) => {
+    setSearch(next.search);
+    setRegistry(next.registry);
+    setSource(next.source);
+    setSortBy(next.sortBy);
+    setSortOrder(next.sortOrder);
+    setPage(next.page);
+  };
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -81,13 +107,7 @@ export default function Packages() {
   };
 
   const handleSort = (col: SortBy) => {
-    const next = nextSortState(
-      { sortBy, sortOrder, page },
-      col
-    );
-    setSortBy(next.sortBy);
-    setSortOrder(next.sortOrder);
-    setPage(next.page);
+    applyFilter(nextSortState(filterState, col));
   };
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -112,8 +132,7 @@ export default function Packages() {
               placeholder="搜索包名..."
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+                applyFilter(setSearchState(filterState, e.target.value));
               }}
             />
           </div>
@@ -122,8 +141,12 @@ export default function Packages() {
             className="select"
             value={registry}
             onChange={(e) => {
-              setRegistry(e.target.value as RegistryType | '');
-              setPage(1);
+              applyFilter(
+                setRegistryState(
+                  filterState,
+                  e.target.value as RegistryType | ''
+                )
+              );
             }}
           >
             <option value="">全部仓库</option>
@@ -135,8 +158,12 @@ export default function Packages() {
             className="select"
             value={source}
             onChange={(e) => {
-              setSource(e.target.value as PackageSource | '');
-              setPage(1);
+              applyFilter(
+                setSourceState(
+                  filterState,
+                  e.target.value as PackageSource | ''
+                )
+              );
             }}
           >
             <option value="">全部来源</option>
